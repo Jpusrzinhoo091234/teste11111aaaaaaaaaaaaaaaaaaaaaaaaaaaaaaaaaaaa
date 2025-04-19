@@ -1,99 +1,98 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    const userNameSpan = document.getElementById('userName');
+    const logoutButton = document.getElementById('logoutButton');
     const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const showRegister = document.getElementById('showRegister');
-    const showLogin = document.getElementById('showLogin');
-    const forms = document.querySelectorAll('.form-container');
-
-    // Load accounts from users.json
-    let accounts = [];
-    fetch('users.json')
-        .then(response => response.json())
-        .then(data => {
-            accounts = data;
-            // Check if base account exists
-            const baseAccountExists = accounts.some(acc => acc.email === 'admin@teste.com');
-            if (!baseAccountExists) {
-                const baseAccount = {
-                    name: 'Admin',
-                    email: 'admin@teste.com',
-                    password: 'admin123'
-                };
-                accounts.push(baseAccount);
-                // Save the base account
-                fetch('users.json', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(accounts)
-                });
-            }
-        })
-        .catch(error => console.error('Error loading users:', error));
-
-    showRegister.addEventListener('click', function(e) {
-        e.preventDefault();
-        forms[0].style.display = 'none';
-        forms[1].style.display = 'block';
-    });
-
-    showLogin.addEventListener('click', function(e) {
-        e.preventDefault();
-        forms[1].style.display = 'none';
-        forms[0].style.display = 'block';
-    });
 
     loginForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
 
-        const user = accounts.find(acc => acc.email === email && acc.password === password);
-        if (user) {
-            alert('Login realizado com sucesso!');
-            // Here you can redirect or show logged in content
-        } else {
-            alert('Email ou senha incorretos!');
-        }
+        fetch('/users.json')
+            .then(response => response.json())
+            .then(users => {
+                const user = users.find(u => u.email === email && u.password === password);
+                if (user) {
+                    loginForm.style.display = 'none';
+                    welcomeScreen.style.display = 'block';
+                    userNameSpan.textContent = user.name;
+                } else {
+                    alert('Credenciais inválidas');
+                }
+            });
     });
 
+    logoutButton.addEventListener('click', function() {
+        welcomeScreen.style.display = 'none';
+        loginForm.style.display = 'block';
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+    });
+
+    const loginForm = document.getElementById('login');
+    const registerForm = document.getElementById('register');
+    const showRegister = document.getElementById('showRegister');
+    const showLogin = document.getElementById('showLogin');
+    const forms = document.querySelectorAll('.form-container');
+
+    // Exibir formulário de cadastro
+    showRegister.addEventListener('click', function(e) {
+        e.preventDefault();
+        forms[0].style.display = 'none';
+        forms[1].style.display = 'block';
+    });
+
+    // Exibir formulário de login
+    showLogin.addEventListener('click', function(e) {
+        e.preventDefault();
+        forms[1].style.display = 'none';
+        forms[0].style.display = 'block';
+    });
+
+    // Lógica de login
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        fetch('/.netlify/functions/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message === 'Login bem-sucedido!') {
+                alert('Login realizado com sucesso!');
+                // Redirecionar ou mostrar conteúdo protegido
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => console.error('Erro ao realizar login:', error));
+    });
+
+    // Lógica de cadastro
     registerForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const name = document.getElementById('registerName').value;
         const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
 
-        // Check if email already exists
-        const emailExists = accounts.some(acc => acc.email === email);
-        if (emailExists) {
-            alert('Este email já está registrado!');
-            return;
-        }
-
-        // Create new account object
-        const newAccount = {
-            name: name,
-            email: email,
-            password: password
-        };
-
-        // Add to accounts array and save to users.json
-        accounts.push(newAccount);
-        fetch('users.json', {
+        fetch('/.netlify/functions/register', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(accounts)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
         })
-        .then(response => {
-            if (response.ok) {
-                alert('Registro realizado com sucesso!');
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.message === 'Cadastro realizado com sucesso!') {
                 forms[1].style.display = 'none';
                 forms[0].style.display = 'block';
             }
         })
-        .catch(error => console.error('Error saving user:', error));
+        .catch(error => console.error('Erro ao cadastrar usuário:', error));
     });
 });

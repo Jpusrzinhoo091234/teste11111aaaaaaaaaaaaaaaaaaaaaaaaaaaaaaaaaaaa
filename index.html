@@ -1,39 +1,39 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Login</title>
+    <title>Login e Cadastro</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="form-container">
-            <h2>Bem-vindo de volta!</h2>
-            <form id="loginForm">
-                <input type="email" id="loginEmail" placeholder="Email" required>
+    <div id="app">
+        <div class="form-container" id="welcomeScreen" style="display:none;">
+            <h2>Bem-vindo, <span id="userName"></span></h2>
+            <button id="logoutButton">Sair</button>
+        </div>
+        <div class="form-container" id="loginForm">
+            <h2>Login</h2>
+            <form id="login">
+                <input type="email" id="loginEmail" placeholder="E-mail" required>
                 <input type="password" id="loginPassword" placeholder="Senha" required>
                 <button type="submit">Entrar</button>
             </form>
-            <div class="toggle-container">
-                <p>Não tem uma conta? <a href="#" id="showRegister">Crie uma agora</a></p>
-            </div>
+            <button id="showRegister">Não tem uma conta? Registre-se</button>
         </div>
 
-        <div class="form-container" style="display: none;">
-            <h2>Crie sua conta</h2>
-            <form id="registerForm">
-                <input type="text" id="registerName" placeholder="Nome completo" required>
-                <input type="email" id="registerEmail" placeholder="Email" required>
-                <input type="password" id="registerPassword" placeholder="Crie uma senha" required>
+        <div class="form-container" id="registerForm" style="display:none;">
+            <h2>Cadastro</h2>
+            <form id="register">
+                <input type="text" id="registerName" placeholder="Nome" required>
+                <input type="email" id="registerEmail" placeholder="E-mail" required>
+                <input type="password" id="registerPassword" placeholder="Senha" required>
                 <button type="submit">Registrar</button>
             </form>
-            <div class="toggle-container">
-                <p>Já tem uma conta? <a href="#" id="showLogin">Faça login aqui</a></p>
-            </div>
+            <button id="showLogin">Já tem uma conta? Faça login</button>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>

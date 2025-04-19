@@ -1,7 +1,7 @@
 [
     {
-        "name": "Admin",
-        "email": "aadmin@testee.com",
+        "name": "Aadmin",
+        "email": "aadmin@teste.com",
         "password": "admin123"
     }
 ]
