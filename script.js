@@ -2,34 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const welcomeScreen = document.getElementById('welcomeScreen');
     const userNameSpan = document.getElementById('userName');
     const logoutButton = document.getElementById('logoutButton');
-    const loginForm = document.getElementById('loginForm');
-
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-
-        fetch('/users.json')
-            .then(response => response.json())
-            .then(users => {
-                const user = users.find(u => u.email === email && u.password === password);
-                if (user) {
-                    loginForm.style.display = 'none';
-                    welcomeScreen.style.display = 'block';
-                    userNameSpan.textContent = user.name;
-                } else {
-                    alert('Credenciais inválidas');
-                }
-            });
-    });
-
-    logoutButton.addEventListener('click', function() {
-        welcomeScreen.style.display = 'none';
-        loginForm.style.display = 'block';
-        document.getElementById('loginEmail').value = '';
-        document.getElementById('loginPassword').value = '';
-    });
-
+    const forms = document.querySelectorAll('.form-container');
     const loginForm = document.getElementById('login');
     const registerForm = document.getElementById('register');
     const showRegister = document.getElementById('showRegister');
