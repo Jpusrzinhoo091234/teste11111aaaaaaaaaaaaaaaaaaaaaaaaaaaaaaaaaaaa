@@ -1,71 +1,114 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const welcomeScreen = document.getElementById('welcomeScreen');
-    const userNameSpan = document.getElementById('userName');
-    const logoutButton = document.getElementById('logoutButton');
-    const forms = document.querySelectorAll('.form-container');
-    const loginForm = document.getElementById('login');
-    const registerForm = document.getElementById('register');
-    const showRegister = document.getElementById('showRegister');
-    const showLogin = document.getElementById('showLogin');
-    const forms = document.querySelectorAll('.form-container');
+    // Get DOM elements with error handling
+    const elements = {
+        welcomeScreen: document.getElementById('welcomeScreen'),
+        userNameSpan: document.getElementById('userName'),
+        logoutButton: document.getElementById('logoutButton'),
+        forms: document.querySelectorAll('.form-container'),
+        loginForm: document.getElementById('login'),
+        registerForm: document.getElementById('register'),
+        showRegister: document.getElementById('showRegister'),
+        showLogin: document.getElementById('showLogin')
+    };
 
-    // Exibir formulário de cadastro
-    showRegister.addEventListener('click', function(e) {
-        e.preventDefault();
-        forms[0].style.display = 'none';
-        forms[1].style.display = 'block';
-    });
+    // Verify essential elements exist
+    if (!elements.forms.length || !elements.loginForm || !elements.registerForm) {
+        console.error('Essential form elements missing');
+        return;
+    }
 
-    // Exibir formulário de login
-    showLogin.addEventListener('click', function(e) {
-        e.preventDefault();
-        forms[1].style.display = 'none';
-        forms[0].style.display = 'block';
-    });
+    // Optimized form toggle function
+    function toggleForms(show, hide) {
+        elements.forms.forEach((form, index) => {
+            form.style.display = index === show ? 'block' : 'none';
+        });
+    }
 
-    // Lógica de login
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
+    // Add loading state management
+    function setLoading(form, isLoading) {
+        const button = form.querySelector('button[type="submit"]');
+        if (button) {
+            button.disabled = isLoading;
+            button.textContent = isLoading ? 'Carregando...' : 'Enviar';
+        }
+    }
 
-        fetch('/.netlify/functions/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message === 'Login bem-sucedido!') {
-                alert('Login realizado com sucesso!');
-                // Redirecionar ou mostrar conteúdo protegido
-            } else {
-                alert(data.message);
+    // Enhanced request handler
+    async function handleRequest(url, method, body) {
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            
+            // Check if response has content
+            const text = await response.text();
+            if (!text) {
+                throw new Error('Resposta vazia do servidor');
             }
-        })
-        .catch(error => console.error('Erro ao realizar login:', error));
+            
+            // Try to parse JSON
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (parseError) {
+                throw new Error('Resposta inválida do servidor');
+            }
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Erro na requisição');
+            }
+            return data;
+        } catch (error) {
+            console.error('Erro:', error);
+            return { message: error.message || 'Erro na conexão' };
+        }
+    }
+
+    // Event listeners
+    if (elements.showRegister) {
+        elements.showRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleForms(1, 0);
+        });
+    }
+
+    if (elements.showLogin) {
+        elements.showLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleForms(0, 1);
+        });
+    }
+
+    // Login logic
+    elements.loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setLoading(elements.loginForm, true);
+        const data = await handleRequest('/.netlify/functions/login', 'POST', {
+            email: document.getElementById('loginEmail').value,
+            password: document.getElementById('loginPassword').value
+        });
+        setLoading(elements.loginForm, false);
+        alert(data.message);
+        if (data.message === 'Login bem-sucedido!') {
+            toggleForms(0, 1);
+        }
     });
 
-    // Lógica de cadastro
-    registerForm.addEventListener('submit', function(e) {
+    // Registration logic
+    elements.registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('registerName').value;
-        const email = document.getElementById('registerEmail').value;
-        const password = document.getElementById('registerPassword').value;
-
-        fetch('/.netlify/functions/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password })
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message);
-            if (data.message === 'Cadastro realizado com sucesso!') {
-                forms[1].style.display = 'none';
-                forms[0].style.display = 'block';
-            }
-        })
-        .catch(error => console.error('Erro ao cadastrar usuário:', error));
+        setLoading(elements.registerForm, true);
+        const data = await handleRequest('/.netlify/functions/register', 'POST', {
+            name: document.getElementById('registerName').value,
+            email: document.getElementById('registerEmail').value,
+            password: document.getElementById('registerPassword').value
+        });
+        setLoading(elements.registerForm, false);
+        alert(data.message);
+        if (data.message === 'Cadastro realizado com sucesso!') {
+            toggleForms(0, 1);
+        }
     });
 });
