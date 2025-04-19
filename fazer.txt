@@ -1,0 +1,311 @@
+Claro! Vou te passar um projeto completo que você pode usar para hospedar no Vercel. Esse projeto será um **site básico de cadastro e login** com backend em **Node.js e Express** e frontend em **HTML, CSS e JavaScript**.
+
+### Estrutura do Projeto
+Aqui está como a estrutura do seu projeto será organizada:
+
+```
+meu-site/
+  ├── public/
+  │   ├── index.html
+  │   ├── login.html
+  │   ├── cadastro.html
+  │   ├── style.css
+  ├── server.js
+  ├── usuarios.json
+  └── package.json
+```
+
+### Passo 1: Criar o `server.js` (Backend em Node.js)
+
+Primeiro, crie o arquivo `server.js` na raiz do projeto. Esse arquivo irá criar o servidor Express, lidar com o cadastro e login de usuários e salvar os dados em um arquivo JSON.
+
+```javascript
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const app = express();
+const port = 3000;
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Carregar usuários do arquivo JSON
+const carregarUsuarios = () => {
+  try {
+    const dados = fs.readFileSync('./usuarios.json', 'utf8');
+    return JSON.parse(dados);
+  } catch (error) {
+    return [];
+  }
+};
+
+// Rota de Cadastro
+app.post('/cadastro', (req, res) => {
+  const { usuario, senha } = req.body;
+  const usuarios = carregarUsuarios();
+
+  const usuarioExistente = usuarios.find(u => u.usuario === usuario);
+  
+  if (usuarioExistente) {
+    return res.status(400).send('Usuário já existe');
+  }
+
+  usuarios.push({ usuario, senha });
+  fs.writeFileSync('./usuarios.json', JSON.stringify(usuarios, null, 2));
+
+  res.send('Cadastro realizado com sucesso!');
+});
+
+// Rota de Login
+app.post('/login', (req, res) => {
+  const { usuario, senha } = req.body;
+  const usuarios = carregarUsuarios();
+
+  const usuarioValido = usuarios.find(u => u.usuario === usuario && u.senha === senha);
+  
+  if (!usuarioValido) {
+    return res.status(401).send('Credenciais inválidas');
+  }
+
+  res.send('Login realizado com sucesso!');
+});
+
+// Iniciar o servidor
+app.listen(port, () => {
+  console.log(`Servidor rodando em http://localhost:${port}`);
+});
+```
+
+### Passo 2: Criar o Arquivo `usuarios.json`
+
+Este arquivo vai armazenar os dados dos usuários cadastrados. Na inicialização, ele estará vazio e será preenchido conforme o cadastro.
+
+Crie o arquivo `usuarios.json` na raiz do projeto com o seguinte conteúdo:
+
+```json
+[]
+```
+
+### Passo 3: Instalar as Dependências
+
+1. No terminal, dentro da pasta do seu projeto, inicialize um novo projeto Node.js:
+   ```bash
+   npm init -y
+   ```
+
+2. Instale o **Express**:
+   ```bash
+   npm install express
+   ```
+
+### Passo 4: Criar o Frontend (HTML, CSS)
+
+Agora, vamos criar o frontend. Crie a pasta `public` e dentro dela crie os arquivos HTML e CSS.
+
+#### 1. **Arquivo `index.html` (Página Inicial)**
+
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu Site - Página Inicial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Bem-vindo ao Meu Site</h1>
+  </header>
+  <main>
+    <section>
+      <h2>Faça Login ou Cadastre-se</h2>
+      <a href="login.html">Login</a> | <a href="cadastro.html">Cadastro</a>
+    </section>
+  </main>
+  <footer>
+    <p>© 2025 Meu Site</p>
+  </footer>
+</body>
+</html>
+```
+
+#### 2. **Arquivo `login.html` (Página de Login)**
+
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Login</h1>
+  <form id="loginForm">
+    <label for="usuario">Usuário:</label>
+    <input type="text" id="usuario" name="usuario" required>
+
+    <label for="senha">Senha:</label>
+    <input type="password" id="senha" name="senha" required>
+
+    <button type="submit">Login</button>
+  </form>
+  <footer>
+    <p>© 2025 Meu Site</p>
+  </footer>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const usuario = document.getElementById('usuario').value;
+      const senha = document.getElementById('senha').value;
+
+      const response = await fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ usuario, senha }),
+      });
+
+      if (response.ok) {
+        alert('Login realizado com sucesso!');
+        window.location.href = '/';
+      } else {
+        alert('Credenciais inválidas');
+      }
+    });
+  </script>
+</body>
+</html>
+```
+
+#### 3. **Arquivo `cadastro.html` (Página de Cadastro)**
+
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Cadastro</h1>
+  <form id="cadastroForm">
+    <label for="usuario">Usuário:</label>
+    <input type="text" id="usuario" name="usuario" required>
+
+    <label for="senha">Senha:</label>
+    <input type="password" id="senha" name="senha" required>
+
+    <button type="submit">Cadastrar</button>
+  </form>
+  <footer>
+    <p>© 2025 Meu Site</p>
+  </footer>
+
+  <script>
+    document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const usuario = document.getElementById('usuario').value;
+      const senha = document.getElementById('senha').value;
+
+      const response = await fetch('/cadastro', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ usuario, senha }),
+      });
+
+      if (response.ok) {
+        alert('Cadastro realizado com sucesso!');
+        window.location.href = '/';
+      } else {
+        alert('Erro ao cadastrar');
+      }
+    });
+  </script>
+</body>
+</html>
+```
+
+#### 4. **Arquivo `style.css` (CSS)**
+
+```css
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background-color: #333;
+  color: #fff;
+  padding: 10px 0;
+  text-align: center;
+}
+
+main {
+  padding: 20px;
+  text-align: center;
+}
+
+footer {
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  padding: 10px 0;
+}
+
+form {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+form input, form button {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+form button {
+  background-color: #333;
+  color: #fff;
+  cursor: pointer;
+}
+
+form button:hover {
+  background-color: #555;
+}
+```
+
+### Passo 5: Testar Localmente
+
+1. **Rodar o Servidor Localmente**:
+   No terminal, na pasta do projeto, execute o comando:
+   ```bash
+   node server.js
+   ```
+
+2. **Acessar o Site**:
+   Abra o navegador e acesse `http://localhost:3000`. Você verá a página inicial com links para o login e cadastro.
+
+### Passo 6: Deploy no Vercel
+
+1. Crie um repositório no **GitHub** e envie todos os arquivos para lá.
+2. No **Vercel**, clique em **New Project** e conecte com seu GitHub.
+3. Selecione o repositório do projeto e clique em **Deploy**.
+4. Após o deploy, o Vercel vai gerar um link para o seu site.
+
+Pronto! Agora você tem um site de cadastro e login funcionando, hospedado no Vercel.
